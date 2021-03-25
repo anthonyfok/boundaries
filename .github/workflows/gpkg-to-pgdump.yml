@@ -58,21 +58,27 @@ jobs:
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
           sudo apt update
           sudo apt install --no-install-recommends -y gdal-bin
+          ogr2ogr --version
 
       - name: Run ogr2ogr
         run: |
           set -x
           PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U postgres -c '\?'
-          ogr2ogr --version
           #ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' user='$POSTGRES_USER' dbname='$DB_NAME' password='$POSTGRES_PASS'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
-          ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' dbname='$DB_NAME' password='$POSTGRES_PASSWORD'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
+          ogr2ogr -t_srs "$srs_def" -f PostgreSQL "$dst_datasource_name" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
           DB_NAME: opendrr
           POSTGRES_PASSWORD: password
+          srs_def="EPSG:4326"
+          dst_datasource_name=PG:"host='$POSTGRES_HOST' user=postgres dbname='$DB_NAME' password='$POSTGRES_PASSWORD'"
              
       - name: post-Housekeeping
         run: |
           ls -l
           df -h /
+
+# TODO
+# add timestamp? checksum?
+# Run weekly or every 6 days to keep the Git LFS cache "fresh"
