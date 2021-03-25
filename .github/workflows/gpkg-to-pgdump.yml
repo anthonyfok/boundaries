@@ -70,11 +70,12 @@ jobs:
         run: |
           set -x
           psql -c "CREATE DATABASE ${DB_NAME} OWNER ${PGUSER};"
-          psql -d $DB_NAME -c 'CREATE SCHEMA boundaries;'
-          #psql -c 'CREATE EXTENSION postgis;' || :
-          #psql -c 'CREATE EXTENSION postgis_topology;' || :
-          #psql -c 'CREATE EXTENSION fuzzystrmatch;' || :
-          #psql -c 'CREATE EXTENSION postgis_tiger_geocoder;' || :
+          export PGDATABASE="$DB_NAME"
+          psql -c 'CREATE SCHEMA boundaries;'
+          psql -c 'CREATE EXTENSION postgis;' || :
+          psql -c 'CREATE EXTENSION postgis_topology;' || :
+          psql -c 'CREATE EXTENSION fuzzystrmatch;' || :
+          psql -c 'CREATE EXTENSION postgis_tiger_geocoder;' || :
           ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
              
       - name: post-Housekeeping
