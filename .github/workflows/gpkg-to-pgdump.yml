@@ -61,17 +61,22 @@ jobs:
           ogr2ogr --version
 
       - name: Run ogr2ogr
-        run: |
-          set -x
-          PGPASSWORD="$POSTGRES_PASSWORD" psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U postgres -c '\?'
-          
-          ogr2ogr -t_srs "$srs_def" -f PostgreSQL PG:"host='$POSTGRES_HOST' user=postgres dbname='$DB_NAME' password='$POSTGRES_PASSWORD'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
           DB_NAME: opendrr
           POSTGRES_PASSWORD: password
+          PGPASSWORD: password
           srs_def: "EPSG:4326"
+        run: |
+          set -x
+          psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U postgres -c 'CREATE SCHEMA boundaries;'
+          #
+          psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U postgres -c 'CREATE EXTENSION postgis;' || :
+          psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U postgres -c 'CREATE EXTENSION postgis_topology;' || :
+          psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U postgres -c 'CREATE EXTENSION fuzzystrmatch;' || :
+          psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U postgres -c 'CREATE EXTENSION postgis_tiger_geocoder;' || :
+          ogr2ogr -t_srs "$srs_def" -f PostgreSQL PG:"host='$POSTGRES_HOST' user=postgres dbname='$DB_NAME' password='$POSTGRES_PASSWORD'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
              
       - name: post-Housekeeping
         run: |
