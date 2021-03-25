@@ -53,6 +53,8 @@ jobs:
           docker ps
           dpkg -l | grep postgres
           psql --version
+          which 7z
+          7z
 
       - name: Git LFS pull
         run: git lfs pull
