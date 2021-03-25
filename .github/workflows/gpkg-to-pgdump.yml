@@ -47,7 +47,6 @@ jobs:
         run: |
           ls -l
           df -h /
-          free -h
 
       - name: Git LFS pull
         run: git lfs pull
@@ -72,5 +71,3 @@ jobs:
         run: |
           ls -l
           df -h /
-          free -h
-
