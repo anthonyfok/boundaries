@@ -51,6 +51,8 @@ jobs:
           whoami
           cat /etc/os-release
           docker ps
+          dpkg -l | grep postgres
+          psql --version
 
       - name: Git LFS pull
         run: git lfs pull
