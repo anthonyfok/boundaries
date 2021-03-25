@@ -76,7 +76,9 @@ jobs:
           psql -c 'CREATE EXTENSION postgis_topology;' || :
           psql -c 'CREATE EXTENSION fuzzystrmatch;' || :
           psql -c 'CREATE EXTENSION postgis_tiger_geocoder;' || :
-          ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
+          for i in *.gpkg; do
+            time ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
+          done
              
       - name: post-Housekeeping
         run: |
