@@ -1,11 +1,11 @@
-name: GPKG to PostgreSQL dump
-
 # Relevant docs:
 # https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
 
+name: GPKG to PostgreSQL dump
 on:
   push:
   pull_request:
+
   workflow_dispatch:
 
 jobs:
