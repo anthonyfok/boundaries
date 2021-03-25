@@ -1,3 +1,6 @@
+# Relevant docs:
+# https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
+
 on:
   push:
   pull_request:
@@ -15,11 +18,12 @@ jobs:
         image: postgis/postgis
         env:
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: your_test_db_name
-        ports:
-          5432:5432
-        # needed because the postgres container does not provide a healthcheck
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
