@@ -48,21 +48,22 @@ jobs:
         run: |
           ls -l
           df -h /
-          docker ps
-
-      #- name: Git LFS pull
-      #  run: git lfs pull
-
-      - name: Install gdal-bin
-        run: |
           whoami
           cat /etc/os-release
+          docker ps
+
+      - name: Git LFS pull
+        run: git lfs pull
+
+      - name: Install gdal-bin from ubuntugis-unstable
+        run: |
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
           sudo apt update
           sudo apt install --no-install-recommends -y gdal-bin
 
       - name: Run ogr2ogr
         run: |
+          set -x
           ogr2ogr --version
           echo "POSTGRES_HOST=$POSTGRES_HOST"
           echo "POSTGRES_HOST=$POSTGRES_HOST"
