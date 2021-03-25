@@ -48,9 +48,10 @@ jobs:
         run: |
           ls -l
           df -h /
+          docker ps
 
-      - name: Git LFS pull
-        run: git lfs pull
+      #- name: Git LFS pull
+      #  run: git lfs pull
 
       - name: Install gdal-bin
         run: |
@@ -58,15 +59,19 @@ jobs:
           cat /etc/os-release
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
           sudo apt update
-          sudo apt install -y gdal-bin
+          sudo apt install --no-install-recommends -y gdal-bin
 
       - name: Run ogr2ogr
         run: |
           ogr2ogr --version
+          echo "POSTGRES_HOST=$POSTGRES_HOST"
+          echo "POSTGRES_HOST=$POSTGRES_HOST"
+          echo "POSTGRES_HOST=$POSTGRES_HOST"
+          echo "POSTGRES_HOST=$POSTGRES_HOST"
           #ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' user='$POSTGRES_USER' dbname='$DB_NAME' password='$POSTGRES_PASS'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
           ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' dbname='$DB_NAME' password='$POSTGRES_PASS'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
         env:
-          POSTGRES_HOST: postgis
+          POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
              
       - name: post-Housekeeping
