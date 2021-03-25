@@ -1,3 +1,5 @@
+name: GPKG to PostgreSQL dump
+
 # Relevant docs:
 # https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
 
@@ -8,7 +10,6 @@ on:
 
 jobs:
   gpkg-to-pgdump:
-    name: GPKG to PostgreSQL dump
     runs-on: ubuntu-20.04
     if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
 
@@ -66,9 +67,10 @@ jobs:
           #ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' user='$POSTGRES_USER' dbname='$DB_NAME' password='$POSTGRES_PASS'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
           ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' dbname='$DB_NAME' password='$POSTGRES_PASSWORD'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
         env:
-          DB_NAME: opendrr
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
+          DB_NAME: opendrr
+          POSTGRES_PASSWORD: password
              
       - name: post-Housekeeping
         run: |
