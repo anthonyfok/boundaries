@@ -71,8 +71,8 @@ jobs:
           POSTGRES_PORT: 5432
           DB_NAME: opendrr
           POSTGRES_PASSWORD: password
-          srs_def="EPSG:4326"
-          dst_datasource_name=PG:"host='$POSTGRES_HOST' user=postgres dbname='$DB_NAME' password='$POSTGRES_PASSWORD'"
+          srs_def: "EPSG:4326"
+          dst_datasource_name: PG:"host='$POSTGRES_HOST' user=postgres dbname='$DB_NAME' password='$POSTGRES_PASSWORD'"
              
       - name: post-Housekeeping
         run: |
