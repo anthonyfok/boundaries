@@ -10,6 +10,7 @@ jobs:
   gpkg-to-pgdump:
     name: GPKG to PostgreSQL dump
     runs-on: ubuntu-20.04
+    container: debian:sid-slim
     if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
 
     services:
@@ -28,8 +29,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # https://github.com/actions/checkout/issues/165
-      - name: Cache git lfs
+      # See https://github.com/actions/checkout/issues/165
+      - name: Cache Git LFS
         uses: actions/cache@v2
         # id: cache
         with:
@@ -48,15 +49,24 @@ jobs:
           df -h /
           free -h
 
-      - name: Git LFS Pull
+      - name: Git LFS pull
         run: git lfs pull
 
-      - name: Test ogr2ogr
+      - name: Install gdal-bin
         run: |
-          sudo apt update
-          sudo apt install -y gdal-bin
+          whoami
+          cat /etc/os-release
+          apt update
+          apt install -y gdal-bin
+
+      - name: Run ogr2ogr
+        run: |
           ogr2ogr --version
-          ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' user='$POSTGRES_USER' dbname='$DB_NAME' password='$POSTGRES_PASS'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
+          #ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' user='$POSTGRES_USER' dbname='$DB_NAME' password='$POSTGRES_PASS'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
+          ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$POSTGRES_HOST' dbname='$DB_NAME' password='$POSTGRES_PASS'" Geometry_PRUID.gpkg -lco LAUNDER=NO -nln boundaries.Geometry_PRUID
+        env:
+          POSTGRES_HOST: postgis
+          POSTGRES_PORT: 5432
              
       - name: post-Housekeeping
         run: |
