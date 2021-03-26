@@ -23,7 +23,6 @@ jobs:
 
     services:
       postgis:
-        if: ${{ github.event_name != 'schedule' }}
         image: postgis/postgis
         env:
           POSTGRES_PASSWORD: password
