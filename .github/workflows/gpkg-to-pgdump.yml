@@ -5,7 +5,9 @@ name: GPKG to PostgreSQL dump
 on:
   push:
   pull_request:
-
+  schedule:
+    #- cron: '38 2 */3 * *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -21,6 +23,7 @@ jobs:
 
     services:
       postgis:
+        if: ${{ github.event_name != 'schedule' }}
         image: postgis/postgis
         env:
           POSTGRES_PASSWORD: password
@@ -46,6 +49,7 @@ jobs:
           key: ${{ runner.os }}-lfs-${{ hashFiles('**/*.gpkg') }} # Adapt to target the type of the files committed with git lfs
 
       - name: pre-Housekeeping
+        if: ${{ github.event_name != 'schedule' }}
         run: |
           ls -l
           df -h /
@@ -62,16 +66,20 @@ jobs:
           ls -l /usr/bin/backblaze-b2 ||:
 
       - name: Git LFS pull
+        if: ${{ github.event_name != 'schedule' }}
         run: git lfs pull
 
-      - name: Install gdal-bin from ubuntugis-unstable (and /usr/bin/time)
+      - name: Install gdal-bin from ubuntugis-unstable
+        if: ${{ github.event_name != 'schedule' }}
         run: |
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
           sudo apt update -q
-          sudo apt install --no-install-recommends -q -y gdal-bin time
+          sudo apt install --no-install-recommends -q -y gdal-bin
+          sudo apt install --no-install-recommends -q -y backblaze-b2
           ogr2ogr --version
 
       - name: Run psql to set up opendrr database
+        if: ${{ github.event_name != 'schedule' }}
         run: |
           # Set up database
           psql -c "CREATE DATABASE ${DB_NAME} OWNER ${PGUSER};"
@@ -82,6 +90,7 @@ jobs:
           psql -d "$DB_NAME" -c 'CREATE EXTENSION postgis_tiger_geocoder;'
 
       - name: Run ogr2ogr to GeoPackage files into PostGIS
+        if: ${{ github.event_name != 'schedule' }}
         run: |
           for i in *.gpkg; do
             echo "ogr2ogr: $i"
@@ -94,17 +103,19 @@ jobs:
 
 
       - name: Compress PostgresSQL custom format dump file
+        if: ${{ github.event_name != 'schedule' }}
         run: 7z a -v100m opendrr-boundaries.7z opendrr-boundaries.dump
 
       #- name: Compress plain-text SQL script file from pg_dump
       #  run: 7z a -v100m opendrr-boundaries-new.sql.7z opendrr-boundaries-new.sql
              
       - name: post-Housekeeping
+        if: ${{ github.event_name != 'schedule' }}
         run: |
           set -x
           ls -l
           ls -l opendrr-boundaries.dump
-          ls -l opendrr-boundaries.dumpdir/
+          #ls -l opendrr-boundaries.dumpdir/
           du -csh *
           du -csh .git/lfs
           df -h /
