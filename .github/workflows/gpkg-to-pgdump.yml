@@ -81,8 +81,8 @@ jobs:
             time ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
           done
           # Extract the PostgreSQL database
-          pg_dump --clean --if-exists -Fc -f opendrr-boundaries.dump "$DB_NAME"
-          pg_dump --clean --if-exists -Fd -f opendrr-boundaries.dumpdir "$DB_NAME"
+          pg_dump --clean --if-exists -Fc -Z 9 -f opendrr-boundaries.dump "$DB_NAME"
+          pg_dump --clean --if-exists -Fd -Z 9 -f opendrr-boundaries.dumpdir "$DB_NAME"
              
       - name: post-Housekeeping
         run: |
