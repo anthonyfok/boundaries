@@ -12,6 +12,12 @@ jobs:
   gpkg-to-pgdump:
     runs-on: ubuntu-20.04
     if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: password
+      DB_NAME: opendrr
 
     services:
       postgis:
@@ -53,22 +59,15 @@ jobs:
       - name: Git LFS pull
         run: git lfs pull
 
-      - name: Install gdal-bin from ubuntugis-unstable
+      - name: Install gdal-bin from ubuntugis-unstable (and /usr/bin/time)
         run: |
           sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
           sudo apt update -q
-          sudo apt install --no-install-recommends -q -y gdal-bin
+          sudo apt install --no-install-recommends -q -y gdal-bin time
           ogr2ogr --version
 
-      - name: Run ogr2ogr
-        env:
-          PGHOST: localhost
-          PGPORT: 5432
-          PGUSER: postgres
-          PGPASSWORD: password
-          DB_NAME: opendrr
+      - name: Run psql to set up opendrr database
         run: |
-          #set -x
           # Set up database
           psql -c "CREATE DATABASE ${DB_NAME} OWNER ${PGUSER};"
           psql -d "$DB_NAME" -c 'CREATE SCHEMA boundaries;'
@@ -76,18 +75,23 @@ jobs:
           psql -d "$DB_NAME" -c 'CREATE EXTENSION postgis_topology;'
           psql -d "$DB_NAME" -c 'CREATE EXTENSION fuzzystrmatch;'
           psql -d "$DB_NAME" -c 'CREATE EXTENSION postgis_tiger_geocoder;'
-          # Import GeoPackage files into PostgreSQL
+
+      - name: Run ogr2ogr to GeoPackage files into PostGIS
           for i in *.gpkg; do
-            time ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
+            echo "ogr2ogr: $i"
+            /usr/bin/time ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
           done
           # Dump the PostgreSQL database
           pg_dump --clean --if-exists -Fc -Z 9 -f opendrr-boundaries.dump "$DB_NAME"
-          pg_dump --clean --if-exists -Fd -Z 9 -f opendrr-boundaries.dumpdir "$DB_NAME"
-          pg_dump --clean --if-exists -Fp -f opendrr-boundaries-new.sql "$DB_NAME"
+          #pg_dump --clean --if-exists -Fd -Z 9 -f opendrr-boundaries.dumpdir "$DB_NAME"
+          #pg_dump --clean --if-exists -Fp -f opendrr-boundaries-new.sql "$DB_NAME"
 
 
-      - name: Compress plain-text SQL script file from pg_dump
-        run: 7z a -v100m opendrr-boundaries-new.sql.7z opendrr-boundaries-new.sql
+      - name: Compress PostgresSQL custom format dump file
+        run: 7z a -v100m opendrr-boundaries.7z opendrr-boundaries.dump
+
+      #- name: Compress plain-text SQL script file from pg_dump
+      #  run: 7z a -v100m opendrr-boundaries-new.sql.7z opendrr-boundaries-new.sql
              
       - name: post-Housekeeping
         run: |
