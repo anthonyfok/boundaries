@@ -1,7 +1,9 @@
 # Relevant docs:
 # https://docs.github.com/en/actions/guides/creating-postgresql-service-containers
+# 7z, docker, time, psql are pre-installed in GitHub's ubuntu-20.04 virtual environment.
 
 name: GPKG to PostgreSQL dump
+
 on:
   push:
   pull_request:
@@ -42,7 +44,6 @@ jobs:
       # See https://github.com/actions/checkout/issues/165
       - name: Cache Git LFS
         uses: actions/cache@v2
-        # id: cache
         with:
           path: .git/lfs
           key: ${{ runner.os }}-lfs-${{ hashFiles('**/*.gpkg') }} # Adapt to target the type of the files committed with git lfs
@@ -50,22 +51,14 @@ jobs:
       - name: pre-Housekeeping
         if: ${{ github.event_name != 'schedule' }}
         run: |
+          set -x
           ls -l
-          df -h /
+          df -h
           whoami
           cat /etc/os-release
           docker ps
-          dpkg -l | grep postgres
-          psql --version
-          7z
-          which 7z
-          which b2 || :
-          which backblaze-b2 || :
-          ls -l /usr/bin/7z || :
-          ls -l /usr/bin/backblaze-b2 ||:
 
       - name: Git LFS pull
-        if: ${{ github.event_name != 'schedule' }}
         run: git lfs pull
 
       - name: Install gdal-bin from ubuntugis-unstable
@@ -75,12 +68,11 @@ jobs:
           sudo apt update -q
           sudo apt install --no-install-recommends -q -y gdal-bin
           sudo apt install --no-install-recommends -q -y backblaze-b2
-          ogr2ogr --version
 
       - name: Run psql to set up opendrr database
         if: ${{ github.event_name != 'schedule' }}
         run: |
-          # Set up database
+          psql --version
           psql -c "CREATE DATABASE ${DB_NAME} OWNER ${PGUSER};"
           psql -d "$DB_NAME" -c 'CREATE SCHEMA boundaries;'
           psql -d "$DB_NAME" -c 'CREATE EXTENSION postgis;'
@@ -91,34 +83,46 @@ jobs:
       - name: Run ogr2ogr to GeoPackage files into PostGIS
         if: ${{ github.event_name != 'schedule' }}
         run: |
+          ogr2ogr --version
           for i in *.gpkg; do
             echo "ogr2ogr: $i"
             /usr/bin/time ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
           done
           # Dump the PostgreSQL database
+          pg_dump --version
           pg_dump --clean --if-exists -Fc -Z 9 -f opendrr-boundaries.dump "$DB_NAME"
           #pg_dump --clean --if-exists -Fd -Z 9 -f opendrr-boundaries.dumpdir "$DB_NAME"
-          #pg_dump --clean --if-exists -Fp -f opendrr-boundaries-new.sql "$DB_NAME"
+          #pg_dump --clean --if-exists -Fp -f opendrr-boundaries.sql "$DB_NAME"
 
-
-      - name: Compress PostgresSQL custom format dump file
-        if: ${{ github.event_name != 'schedule' }}
-        run: 7z a -v100m opendrr-boundaries.7z opendrr-boundaries.dump
+      #- name: Compress PostgresSQL custom format dump file
+      #  if: ${{ github.event_name != 'schedule' }}
+      #  run: 7z a -v100m opendrr-boundaries.7z opendrr-boundaries.dump
 
       #- name: Compress plain-text SQL script file from pg_dump
+      #  if: ${{ github.event_name != 'schedule' }}
       #  run: 7z a -v100m opendrr-boundaries-new.sql.7z opendrr-boundaries-new.sql
-             
+
+      - name: Upload to Backblaze B2
+        if: ${{ github.event_name != 'schedule' }}
+        env:
+          OPENDRR_B2_KEY_ID: ${{ secrets.OPENDRR_B2_KEY_ID }}
+          OPENDRR_B2_APPLICATION_KEY: ${{ secrets.OPENDRR_B2_APPLICATION_KEY }}
+        run: |
+          set -x
+          backblaze-b2 version
+          backblaze-b2 authorize-account "$OPENDRR_B2_KEY_ID" "$OPENDRR_B2_APPLICATION_KEY"
+          backblaze-b2 upload-file --sha1 $(sha1sum opendrr-boundaries.sql | cut -d ' ' -f1) --contentType application/vnd.postgresql.dump OpenDRR opendrr-boundaries.dump opendrr-boundaries.dump
+          backblaze-b2 clear-account
+
       - name: post-Housekeeping
         if: ${{ github.event_name != 'schedule' }}
         run: |
           set -x
           ls -l
           ls -l opendrr-boundaries.dump
-          #ls -l opendrr-boundaries.dumpdir/
           du -csh *
           du -csh .git/lfs
           df -h /
 
 # TODO
 # add timestamp? checksum?
-# Run weekly or every 6 days to keep the Git LFS cache "fresh"
