@@ -55,6 +55,11 @@ jobs:
           dpkg -l | grep postgres
           psql --version
           7z
+          which 7z
+          which b2 || :
+          which backblaze-b2 || :
+          ls -l /usr/bin/7z || :
+          ls -l /usr/bin/backblaze-b2 ||:
 
       - name: Git LFS pull
         run: git lfs pull
