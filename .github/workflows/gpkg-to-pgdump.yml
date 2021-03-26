@@ -80,9 +80,14 @@ jobs:
           for i in *.gpkg; do
             time ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
           done
-          # Extract the PostgreSQL database
+          # Dump the PostgreSQL database
           pg_dump --clean --if-exists -Fc -Z 9 -f opendrr-boundaries.dump "$DB_NAME"
           pg_dump --clean --if-exists -Fd -Z 9 -f opendrr-boundaries.dumpdir "$DB_NAME"
+          pg_dump --clean --if-exists -Fp -f opendrr-boundaries-new.sql "$DB_NAME"
+
+
+      - name: Compress plain-text SQL script file from pg_dump
+        run: 7z a -v100m opendrr-boundaries-new.sql.7z opendrr-boundaries-new.sql
              
       - name: post-Housekeeping
         run: |
