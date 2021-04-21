@@ -5,7 +5,11 @@ name: GPKG to PostgreSQL archive
 
 on:
   push:
-  pull_request:
+    branches:
+      - master
+  #pull_request:
+  #  branches:
+  #    - master
   schedule:
     - cron: '38 2 */3 * *'
   workflow_dispatch:
@@ -45,6 +49,9 @@ jobs:
         with:
           path: .git/lfs
           key: ${{ runner.os }}-lfs-${{ hashFiles('**/*.gpkg') }} # Adapt to target the type of the files committed with git lfs
+          restore-keys: |
+            ${{ runner.os }}-lfs-${{ hashFiles('**/*.gpkg') }}
+            ${{ runner.os }}-lfs-
 
       - name: Pre-run information
         if: ${{ github.event_name != 'schedule' }}
@@ -78,7 +85,7 @@ jobs:
           psql -d "$DB_NAME" -c 'CREATE EXTENSION fuzzystrmatch;'
           psql -d "$DB_NAME" -c 'CREATE EXTENSION postgis_tiger_geocoder;'
 
-      - name: Run ogr2ogr to GeoPackage files into PostGIS
+      - name: Run ogr2ogr to import GeoPackage files into PostGIS
         if: ${{ github.event_name != 'schedule' }}
         run: |
           ogr2ogr --version
