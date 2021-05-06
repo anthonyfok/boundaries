@@ -88,7 +88,7 @@ jobs:
         if: ${{ github.event_name != 'schedule' }}
         run: |
           stdbuf -oL ogr2ogr --version
-          for i in *.gpkg; do
+          for i in *.gpkg hexbin_4326/*.gpkg; do
             stdbuf -oL echo "ogr2ogr: $i"
             /usr/bin/time stdbuf -oL ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
           done
