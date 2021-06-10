@@ -31,7 +31,3 @@ Hexbin geometries generated in various grid spacing sizes.
  - HexGrid_100km.gpkg
  - SAUID_HexGrid.gpkg
 		 - Lookup table linking settled areas to all the hexgrid geometries.
-	
-#### / Reference
- - Reference_SAUID_points.gpkg
-		 - Settled area points generated from the settled area polygons used to create the lookup table.  The point is the centroid of the settled area polygons if it is within the polygon extents.  If not the point is a random generated point within the settled area polygon.
