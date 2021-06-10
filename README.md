@@ -30,4 +30,4 @@ Hexbin geometries generated in various grid spacing sizes.
  - HexGrid_50km.gpkg
  - HexGrid_100km.gpkg
  - SAUID_HexGrid.gpkg
-		 - Lookup table linking settled areas to all the hexgrid geometries.
+	- Lookup table linking settled areas to all the hexgrid geometries.
