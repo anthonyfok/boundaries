@@ -2,19 +2,19 @@
 Boundary geometries for model results.  All geometries in this repo are generated in Geopackage format.
 
  - Geometry_ADAUID.gpkg
-		 - Aggregate dissemination area geometry
+	- Aggregate dissemination area geometry
  - Geometry_CANADA.gpkg
-		 - Canada outline geometry
+	- Canada outline geometry
  - Geometry_CDUID.gpkg
-		 - Census Division geometry
+	 - Census Division geometry
  - Geometry_CSDUID.gpkg
-		 - Census Subdivision geometry
+	- Census Subdivision geometry
  - Geometry_DAUID.gpkg
-		- Dissemination Area geometry
+	- Dissemination Area geometry
  - Geometry_ERUID.gpkg
-		 - Economic Region geometry
+	- Economic Region geometry
  - Geometry_FSAUID.gpkg
-		 - Forward Sortation Area geometry
+	- Forward Sortation Area geometry
  - Geometry_SAUID.gpkg
 	 -  Settled area geometry
   
