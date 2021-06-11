@@ -1,5 +1,5 @@
 # boundaries
-Boundary geometries for model results.  All geometries in this repo are generated in Geopackage format.
+Boundary geometries for model results.  All geometries in this repo are generated in GeoPackage format.
 
  - Geometry_ADAUID.gpkg
 	- Aggregate dissemination area geometry
