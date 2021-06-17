@@ -99,6 +99,18 @@ jobs:
           stdbuf -oL pg_dump --version
           stdbuf -oL pg_dump --clean --if-exists -Fc -Z 9 -f opendrr-boundaries.dump "$DB_NAME"
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.S3_WRITER_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.S3_WRITER_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ca-central-1
+
+      - name: Copy opendrr-boundaries.dump to the S3 bucket with the AWS CLI
+        if: ${{ github.event_name != 'schedule' }}
+        run: |
+          aws s3 sync . s3://opendrr-api-prebuilt-cache-1/boundaries/ --exclude "*" --include "opendrr-boundaries.dump" --include "opendrr-boundaries.sql" --acl bucket-owner-full-control
+
       - name: Upload to Backblaze B2
         if: ${{ github.event_name != 'schedule' }}
         env:
