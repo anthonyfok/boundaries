@@ -128,6 +128,18 @@ jobs:
           stdbuf -oL backblaze-b2 upload-file --sha1 $(sha1sum opendrr-boundaries.dump | cut -d ' ' -f1) --contentType application/vnd.postgresql.dump OpenDRR opendrr-boundaries.dump opendrr-boundaries.dump
           stdbuf -oL backblaze-b2 clear-account
 
+      - name: Compress with xz
+        run: |
+          xz -9vk opendrr-boundaries.dump
+
+      - name: Upload as release asset
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: opendrr-boundaries.dump.xz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Post-run information
         if: ${{ github.event_name != 'schedule' }}
         run: |
