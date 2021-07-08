@@ -17,7 +17,9 @@ Boundary geometries for model results.  All geometries in this repo are generate
 	- Forward Sortation Area geometry
  - Geometry_SAUID.gpkg
 	 -  Settled area geometry
-  
+ - opendrr-boundaries.sql
+ 	 - SQL backup of boundaries schema used in OpenDRR PostgresSQL database.  Contains all geopackages in this repository, indexed.
+ 
   Adapted from Statistics Canada, 2016 Census - Boundary files, 2020. This does not constitute an endorsement by Statistics Canada of this product.
 
 ## hexbin_4326
