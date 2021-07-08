@@ -31,3 +31,13 @@ Hexbin geometries generated in various grid spacing sizes.
  - HexGrid_100km.gpkg
  - SAUID_HexGrid.gpkg
 	- Lookup table linking settled areas to all the hexgrid geometries.
+- SAUID_HexGrid_5km_intersect.gpkg
+	- Table with settled areas intersected on hexgrid 5km with calculated area and area ratios (intersected area / settled area).
+- SAUID_HexGrid_10km_intersect.gpkg
+	- Table with settled areas intersected on hexgrid 10km with calculated area and area ratios (intersected area / settled area).
+- SAUID_HexGrid_25km_intersect.gpkg
+	- Table with settled areas intersected on hexgrid 25km with calculated area and area ratios (intersected area / settled area).
+- SAUID_HexGrid_50km_intersect.gpkg
+	- Table with settled areas intersected on hexgrid 50km with calculated area and area ratios (intersected area / settled area).
+- SAUID_HexGrid_100km_intersect.gpkg
+	- Table with settled areas intersected on hexgrid 100km with calculated area and area ratios (intersected area / settled area).
