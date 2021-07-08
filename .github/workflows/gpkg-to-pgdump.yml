@@ -161,6 +161,8 @@ jobs:
             opendrr-boundaries.dump.*sum
             opendrr-boundaries.sql
             opendrr-boundaries.sql.*sum
+            *.gpkg
+            hexbin_4326/*.gpkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
