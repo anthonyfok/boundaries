@@ -95,16 +95,29 @@ jobs:
             /usr/bin/time stdbuf -oL ogr2ogr -t_srs "EPSG:4326" -f PostgreSQL PG:"host='$PGHOST' user=postgres dbname='$DB_NAME' password='$PGPASSWORD'" "$i" -lco LAUNDER=NO -nln boundaries.$(basename "$i" .gpkg)
           done
 
-      - name: Extract the opendrr PostGIS database into a custom-format archive file
+      - name: Run pg_dump to extract the opendrr PostGIS database into a custom-format archive file
         if: ${{ github.event_name != 'schedule' }}
         run: |
           stdbuf -oL pg_dump --version
           stdbuf -oL pg_dump --clean --if-exists -Fc -Z 9 -f opendrr-boundaries.dump "$DB_NAME"
 
+      - name: Calculate checksums of opendrr-boundaries.dump
+        run: |
+          for ext in dump sql; do
+            for i in md5 sha1 sha256 sha512; do
+              echo "${i}sum opendrr-boundaries.$ext > opendrr-boundaries.$ext.${i}sum"
+              ${i}sum opendrr-boundaries.$ext > opendrr-boundaries.$ext.${i}sum
+            done
+          done
+
       - uses: actions/upload-artifact@v2
         with:
           name: opendrr-boundaries-dump
-          path: opendrr-boundaries.dump
+          path: |
+            opendrr-boundaries.dump
+            opendrr-boundaries.dump.*sum
+            opendrr-boundaries.sql
+            opendrr-boundaries.sql.*sum
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -116,7 +129,13 @@ jobs:
       - name: Copy opendrr-boundaries.dump to the S3 bucket with the AWS CLI
         if: ${{ github.event_name != 'schedule' }}
         run: |
-          aws s3 sync . s3://opendrr-api-prebuilt-cache-1/boundaries/ --exclude "*" --include "opendrr-boundaries.dump" --include "opendrr-boundaries.sql" --acl bucket-owner-full-control
+          aws s3 sync . s3://opendrr-api-prebuilt-cache-1/boundaries/ \
+            --exclude "*" \
+            --include "opendrr-boundaries.dump" \
+            --include "opendrr-boundaries.dump.*sum" \
+            --include "opendrr-boundaries.sql" \
+            --include "opendrr-boundaries.sql.*sum" \
+            --acl bucket-owner-full-control
 
       - name: Upload to Backblaze B2
         if: ${{ github.event_name != 'schedule' }}
@@ -125,20 +144,23 @@ jobs:
           OPENDRR_B2_APPLICATION_KEY: ${{ secrets.OPENDRR_B2_APPLICATION_KEY }}
         run: |
           set -x
-          stdbuf -oL backblaze-b2 version
-          stdbuf -oL backblaze-b2 authorize-account "$OPENDRR_B2_KEY_ID" "$OPENDRR_B2_APPLICATION_KEY"
+          backblaze-b2 version
+          backblaze-b2 authorize-account "$OPENDRR_B2_KEY_ID" "$OPENDRR_B2_APPLICATION_KEY"
           stdbuf -oL backblaze-b2 upload-file --sha1 $(sha1sum opendrr-boundaries.dump | cut -d ' ' -f1) --contentType application/vnd.postgresql.dump OpenDRR opendrr-boundaries.dump opendrr-boundaries.dump
-          stdbuf -oL backblaze-b2 clear-account
-
-      - name: Compress with xz
-        run: |
-          xz -9vk opendrr-boundaries.dump
+          for i in md5 sha1 sha256 sha512; do
+            backblaze-b2 upload-file --sha1 $(sha1sum opendrr-boundaries.dump | cut -d ' ' -f1) --contentType text/plain OpenDRR opendrr-boundaries.dump.${i}sum opendrr-boundaries.dump.${i}sum
+          done
+          backblaze-b2 clear-account
 
       - name: Upload as release asset
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: opendrr-boundaries.dump.xz
+          files: |
+            opendrr-boundaries.dump
+            opendrr-boundaries.dump.*sum
+            opendrr-boundaries.sql
+            opendrr-boundaries.sql.*sum
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
