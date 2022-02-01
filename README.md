@@ -42,6 +42,8 @@ The hex grid collection is a series of hexagonal geometries and tables developed
     - Hexagonal geometry extents of Canada based off GEM’s global fabric hex grid.
  - SAUID_HexGrid.gpkg
 	- Table referencing the centroid of each settled area id (SAUID) to the various HexGrid geometries (5km,10km,25km,50km,100km) used for aggregation purposes.
+- SAUID_HexGrid_1km_intersect.gpkg
+	- Table referencing the settled area id (SAUID) area, and its percentage of area intersect with respect to HexGrid_1km_{P/T} geometry used for aggregation purposes.
 - SAUID_HexGrid_5km_intersect.gpkg
 	- Table referencing the settled area id (SAUID) area, and its percentage of area intersect with respect to HexGrid_5km geometry used for aggregation purposes.
 - SAUID_HexGrid_10km_intersect.gpkg
