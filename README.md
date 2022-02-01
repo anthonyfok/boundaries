@@ -24,12 +24,14 @@ Boundary geometries for model results.  All geometries in this repo are generate
 
 ## hexbin_4326
 
-The hex grid collection is a series of hexagonal geometries and tables developed to help users view the national human settlement layers at different hexagonal aggregation levels outside of the conventional census boundaries.  The hex grid geometries were created in QGIS with the MMQGIS plugin using the Canadian boundary extents at various x grid spacings.  The reference tables are generated and contains information needed for aggregation purposes of the national human settlement layers up to the given hex grid geometry.  
+The hex grid collection is a series of hexagonal geometries and tables developed to help users view the national human settlement layers at different hexagonal aggregation levels outside of the conventional census boundaries.  The hex grid geometries were created in QGIS with the MMQGIS plugin using the Canadian, provincial, and territorial boundary extents at various x grid spacings.  The reference tables are generated and contains information needed for aggregation purposes of the national human settlement layers up to the given hex grid geometry.  
 
+ - HexGrid_1km_{P/T}.gpkg
+	- Clipped hexagonal geometry of provinces and territories based on a x grid spacing of approximately 0.05 degrees.
  - HexGrid_5km.gpkg
 	- Clipped hexagonal geometry of Canada based on a x grid spacing of approximately 0.05 degrees.
  - HexGrid_10km.gpkg
-    - Clipped hexagonal geometry of Canada based on a x grid spacing of approximately 0.01 degrees.
+    - Clipped hexagonal geometry of Canada based on a x grid spacing of approximately 0.1 degrees.
  - HexGrid_25km.gpkg
     - Clipped hexagonal geometry of Canada based on a x grid spacing of approximately 0.25 degrees.
  - HexGrid_50km.gpkg
