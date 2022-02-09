@@ -8,7 +8,7 @@ Boundary geometries for model results.  All geometries in this repo are generate
  - Geometry_CDUID.gpkg
 	 - Census Division geometry
  - Geometry_CSDUID.gpkg
-	- Census Subdivision geometry, simplified polygon at 0.005 degrees. 
+	- Census Subdivision geometry
  - Geometry_DAUID.gpkg
 	- Dissemination Area geometry
  - Geometry_ERUID.gpkg
