@@ -1,0 +1,93 @@
+name: Upload opendrr-boundaries.sql
+
+# This GitHub Actions workflow checkouts (with Git LFS)
+# the opendrr-boundaries.sql PostgreSQL archive generated on
+# @whkchow's computer and upload it as:
+#  - artifact on GitHub
+#  - release asset on GitHub (for a tagged release)
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+  #pull_request:
+  #  branches:
+  #    - master
+  workflow_dispatch:
+
+jobs:
+  upload-opendrr-boundaries-sql:
+    concurrency: prevent-race-condition
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check if we are on the correct branch
+        run: |
+          set -x
+          echo "BRANCH_NAME=$BRANCH_NAME"
+          git branch
+          ls -l
+          du -csh .git/lfs
+
+      # See https://github.com/actions/checkout/issues/165
+      - name: Cache Git LFS for opendrr-boundaries.sql
+        uses: actions/cache@v2
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('**/opendrr-boundaries.sql') }}
+          restore-keys: |
+            ${{ runner.os }}-lfs-sql-${{ hashFiles('**/opendrr-boundaries.sql') }}
+            ${{ runner.os }}-lfs-sql
+
+      - name: Git LFS pull
+        run: |
+          set -x
+          GIT_TRACE=1 git lfs pull -I "opendrr-boundaries.sql"
+
+      - name: Show directory after Git LFS pull
+        run: |
+          set -x
+          cp -al opendrr-boundaries.sql "opendrr-boundaries-${BRANCH_NAME}.sql"
+          ls -l
+          du -csh .git/lfs
+
+      - name: Calculate checksum of opendrr-boundaries.sql
+        run: |
+          set -x
+          sha256sum -b opendrr-boundaries.sql > opendrr-boundaries.sql.sha256sum
+
+      - name: "Upload opendrr-boundaries.sql as GitHub artifact"
+        uses: actions/upload-artifact@v3
+        with:
+          name: opendrr-boundaries-sql
+          path: |
+            opendrr-boundaries.sql
+            opendrr-boundaries.sql.*sum
+          if-no-files-found: error
+
+      - name: Split opendrr-boundaries.sql into 2GB chunks (for tagged release)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -x
+          split -b 2GB -d --verbose opendrr-boundaries.sql opendrr-boundaries.sql.
+          for i in opendrr-boundaries.sql.[0-9][0-9]; do
+            sha256sum -b "${i}" >> "opendrr-boundaries.sql.sha256sum"
+          done
+
+      - name: "Upload opendrr-boundaries.sql as GitHub release asset (for tagged release)"
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            opendrr-boundaries.sql.[0-9][0-9]
+            opendrr-boundaries.sql.*sum
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
