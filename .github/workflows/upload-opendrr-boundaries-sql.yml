@@ -5,6 +5,7 @@ name: Upload opendrr-boundaries.sql
 # @whkchow's computer and upload it as:
 #  - artifact on GitHub
 #  - release asset on GitHub (for a tagged release)
+# It is also uploaded to Backblaze B2 for speed.
 
 on:
   push:
@@ -90,3 +91,34 @@ jobs:
             opendrr-boundaries.sql.*sum
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: "Upload to Backblaze B2 bucket (for fast download)"
+        env:
+          OPENDRR_B2_KEY_ID: ${{ secrets.OPENDRR_B2_KEY_ID }}
+          OPENDRR_B2_APPLICATION_KEY: ${{ secrets.OPENDRR_B2_APPLICATION_KEY }}
+        run: |
+          set -x
+          sudo apt update -q
+          sudo apt install --no-install-recommends -q -y backblaze-b2
+
+          backblaze-b2 version
+          backblaze-b2 authorize-account "$OPENDRR_B2_KEY_ID" "$OPENDRR_B2_APPLICATION_KEY"
+
+          stdbuf -oL backblaze-b2 upload-file \
+            --sha1 $(sha1sum opendrr-boundaries.sql | cut -d ' ' -f1) \
+            --contentType application/vnd.postgresql.dump \
+            OpenDRR \
+            opendrr-boundaries.sql \
+            "opendrr-boundaries-${BRANCH_NAME}.sql"
+
+          for i in sha256; do
+            backblaze-b2 upload-file \
+              --sha1 $(sha1sum "opendrr-boundaries.sql.${i}sum" | cut -d ' ' -f1) \
+              --contentType text/plain \
+              OpenDRR \
+              "opendrr-boundaries.sql.${i}sum" \
+              "opendrr-boundaries-${BRANCH_NAME}.sql.${i}sum"
+          done
+
+          backblaze-b2 clear-account
