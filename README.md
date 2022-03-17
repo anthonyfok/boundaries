@@ -19,6 +19,8 @@ Boundary geometries for model results.  All geometries in this repo are generate
 	 -  Settled area geometry
  - opendrr-boundaries.sql
  	 - SQL backup of boundaries schema used in OpenDRR PostgresSQL database.  Contains all geopackages in this repository, indexed.
+ - LandGov_v1.csv
+	 - Record of all settled areas and whether they are managed under provincial/territorial authority or through other land management frameworks such as Indian Land, Indian Reserve or Land Claims.
  
   Adapted from Statistics Canada, 2016 Census - Boundary files, 2020. This does not constitute an endorsement by Statistics Canada of this product.
 
@@ -27,7 +29,7 @@ Boundary geometries for model results.  All geometries in this repo are generate
 The hex grid collection is a series of hexagonal geometries and tables developed to help users view the national human settlement layers at different hexagonal aggregation levels outside of the conventional census boundaries.  The hex grid geometries were created in QGIS with the MMQGIS plugin using the Canadian, provincial, and territorial boundary extents at various x grid spacings.  The reference tables are generated and contains information needed for aggregation purposes of the national human settlement layers up to the given hex grid geometry.  
 
  - HexGrid_1km_{P/T}.gpkg
-	- Clipped hexagonal geometry of provinces and territories based on a x grid spacing of approximately 0.05 degrees.
+	- Clipped hexagonal geometry of provinces and territories based on a x grid spacing of approximately 0.01 degrees.
  - HexGrid_5km.gpkg
 	- Clipped hexagonal geometry of Canada based on a x grid spacing of approximately 0.05 degrees.
  - HexGrid_10km.gpkg
