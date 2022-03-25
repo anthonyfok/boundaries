@@ -70,3 +70,4 @@ jobs:
         with:
           file: "**/*.gpkg;opendrr-boundaries-gpkg.sha256sum"
           tags: true
+          draft: false
