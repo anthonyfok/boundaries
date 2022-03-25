@@ -68,33 +68,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: "*.gpkg;hexbin_4326/*.gpkg;opendrr-boundaries-gpkg.sha256sum"
+          file: "**/*.gpkg;opendrr-boundaries-gpkg.sha256sum"
           tags: true
-
-      - name: "Upload GeoPackages as GitHub release assets (Boundaries)"
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: |
-            opendrr-boundaries-gpkg.sha256sum
-            *.gpkg
-
-      - name: "Upload GeoPackages as GitHub release assets (SAUID HexGrid)"
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: |
-            hexbin_4326/SAUID_HexGrid_*.gpkg
-
-      - name: "Upload GeoPackages as GitHub release assets (HexGrid)"
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: |
-            hexbin_4326/HexGrid_*.gpkg
