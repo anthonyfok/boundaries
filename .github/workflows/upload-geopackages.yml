@@ -80,5 +80,6 @@ jobs:
         with:
           files: |
             opendrr-boundaries-gpkg.sha256sum
+            **/*.gpkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
