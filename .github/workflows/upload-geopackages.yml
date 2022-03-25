@@ -74,12 +74,21 @@ jobs:
           cat opendrr-boundaries-gpkg.sha256sum
           ls -l
 
-      - name: "Upload GeoPackages as GitHub release assets (for tagged release)"
+      - name: "Upload GeoPackages as GitHub release assets (Boundaries)"
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
             opendrr-boundaries-gpkg.sha256sum
-            **/*.gpkg
+            *.gpkg
+
+      - name: "Upload GeoPackages as GitHub release assets (HexGrid)"
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            hexbin_4326/*.gpkg
