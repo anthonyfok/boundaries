@@ -1,0 +1,68 @@
+name: Refresh cache
+
+# This GitHub Actions workflow runs once every week (or on demand)
+# to keep our actions cache fresh so it does not get deleted.
+
+on:
+  schedule:
+    - cron: '38 8 * * 0'  # i.e. Sunday at 00:38 or 01:38 Pacific Time
+  workflow_dispatch:
+
+jobs:
+  refresh-cache-for-boundaries-sql:
+    concurrency: prevent-race-condition
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Cache Git LFS for opendrr-boundaries.sql
+        uses: actions/cache@v2
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('**/opendrr-boundaries.sql') }}
+          restore-keys: |
+            ${{ runner.os }}-lfs-sql-${{ hashFiles('**/opendrr-boundaries.sql') }}
+            ${{ runner.os }}-lfs-sql
+
+      - name: Git LFS pull
+        run: |
+          set -x
+          GIT_TRACE=1 git lfs pull -I "opendrr-boundaries.sql"
+
+      - name: Show directory after Git LFS pull
+        run: |
+          set -x
+          ls -l
+          du -csh .git/lfs
+
+  refresh-cache-for-geopackages:
+    concurrency: prevent-race-condition
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Cache Git LFS for GeoPackages
+        uses: actions/cache@v2
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('**/*.gpkg') }}
+          restore-keys: |
+            ${{ runner.os }}-lfs-gpkg-${{ hashFiles('**/*.gpkg') }}
+            ${{ runner.os }}-lfs-gpkg
+
+      - name: Git LFS pull
+        run: |
+          set -x
+          GIT_TRACE=1 git lfs pull -I "**/*.gpkg"
+
+      - name: Show directory after Git LFS pull
+        run: |
+          set -x
+          ls -l
+          du -csh .git/lfs
