@@ -71,3 +71,24 @@ jobs:
           file: "**/*.gpkg;opendrr-boundaries-gpkg.sha256sum"
           tags: true
           draft: false
+
+      - name: "Upload GeoPackages as GitHub release assets (HexGrid)"
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            hexbin_4326/HexGrid_1km_AB.gpkg
+            hexbin_4326/HexGrid_1km_BC.gpkg
+            hexbin_4326/HexGrid_1km_MB.gpkg
+            hexbin_4326/HexGrid_1km_NB.gpkg
+            hexbin_4326/HexGrid_1km_NL.gpkg
+            hexbin_4326/HexGrid_1km_NS.gpkg
+            hexbin_4326/HexGrid_1km_NT.gpkg
+            hexbin_4326/HexGrid_1km_NU.gpkg
+            hexbin_4326/HexGrid_1km_ON.gpkg
+            hexbin_4326/HexGrid_1km_PE.gpkg
+            hexbin_4326/HexGrid_1km_QC.gpkg
+            hexbin_4326/HexGrid_1km_SK.gpkg
+            hexbin_4326/HexGrid_1km_YT.gpkg
