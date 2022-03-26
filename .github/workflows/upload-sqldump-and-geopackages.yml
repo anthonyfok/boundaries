@@ -1,11 +1,15 @@
-name: Upload opendrr-boundaries.sql
+name: Upload SQL dump and GeoPackages
 
 # This GitHub Actions workflow checkouts (with Git LFS)
-# the opendrr-boundaries.sql PostgreSQL archive generated on
-# @whkchow's computer and upload it as:
-#  - artifact on GitHub
-#  - release asset on GitHub (for a tagged release)
-# It is also uploaded to Backblaze B2 for speed.
+#
+#  1. the opendrr-boundaries.sql PostgreSQL archive generated on
+#     @whkchow's computer and upload it as:
+#      - artifact on GitHub
+#      - release asset on GitHub (for a tagged release)
+#     It is also uploaded to Backblaze B2 for speed.
+#
+#  2. the GeoPackage files, and upload them as release assets on GitHub
+#     for a tagged release.
 
 on:
   push:
@@ -13,18 +17,19 @@ on:
       - '**'
     tags:
       - 'v*'
-  #pull_request:
-  #  branches:
-  #    - master
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag"
+        required: true
+
+concurrency: prevent-race-condition
 
 jobs:
   upload-opendrr-boundaries-sql:
-    concurrency: prevent-race-condition
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
     env:
-      BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
     steps:
       - name: Checkout code
@@ -66,6 +71,7 @@ jobs:
 
       - name: "Upload opendrr-boundaries.sql as GitHub artifact"
         uses: actions/upload-artifact@v3
+        if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
         with:
           name: opendrr-boundaries-sql
           path: |
@@ -74,7 +80,7 @@ jobs:
           if-no-files-found: error
 
       - name: Split opendrr-boundaries.sql into 2GB chunks (for tagged release)
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         run: |
           set -x
           split -b 2GB -d --verbose opendrr-boundaries.sql opendrr-boundaries.sql.
@@ -84,14 +90,14 @@ jobs:
 
       - name: "Upload opendrr-boundaries.sql as GitHub release asset (for tagged release)"
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
           files: |
             opendrr-boundaries.sql.[0-9][0-9]
             opendrr-boundaries.sql.*sum
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
       - name: "Upload to Backblaze B2 bucket (for fast download)"
         env:
@@ -122,3 +128,60 @@ jobs:
           done
 
           backblaze-b2 clear-account
+
+
+  upload-geopackages:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    env:
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check if we are on the correct branch
+        run: |
+          set -x
+          echo "BRANCH_NAME=$BRANCH_NAME"
+          git branch
+          ls -l
+          du -csh .git/lfs
+
+      # See https://github.com/actions/checkout/issues/165
+      - name: Cache Git LFS for GeoPackages
+        uses: actions/cache@v2
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('**/*.gpkg') }}
+          restore-keys: |
+            ${{ runner.os }}-lfs-gpkg-${{ hashFiles('**/*.gpkg') }}
+            ${{ runner.os }}-lfs-gpkg
+
+      - name: Git LFS pull
+        run: |
+          set -x
+          GIT_TRACE=1 git lfs pull -I "**/*.gpkg"
+
+      - name: Show directory after Git LFS pull
+        run: |
+          set -x
+          ls -l
+          du -csh .git/lfs
+
+      - name: Calculate checksum of GeoPackages
+        run: |
+          set -x
+          sha256sum -b */*.gpkg *.gpkg > opendrr-boundaries-gpkg.sha256sum
+          cat opendrr-boundaries-gpkg.sha256sum
+          ls -l
+
+      - name: "Upload GeoPackages as release assets using xresloader/upload-to-github-release@v1"
+        uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: "**/*.gpkg;opendrr-boundaries-gpkg.sha256sum"
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag || '' }}
+          tags: true
+          draft: false
