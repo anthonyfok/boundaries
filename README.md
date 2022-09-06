@@ -60,6 +60,6 @@ The hex grid collection is a series of hexagonal geometries and tables developed
 - SAUID_HexGrid_GlobalFabric_intersect.7z
 	- Table referencing the settled area id (SAUID) area, and its percentage of area intersect with respect to HexGrid_GlobalFabric geometry used for aggregation purposes.
 
-## hexgrid_900913
+## hexgrid_3857
 
-Hex grid collection similar to hexgrid_4326 but created in EPSG 900913. Refer to hexgrid_4326 for description.
+Hex grid collection similar to hexgrid_4326 but created in EPSG 3857. Refer to hexgrid_4326 for description.
