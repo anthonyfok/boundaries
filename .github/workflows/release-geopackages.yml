@@ -55,19 +55,37 @@ jobs:
           ls -l
           du -csh .git/lfs
 
-      - name: Calculate checksum of GeoPackages
+      # The GeoPackage files inside hexgrid_3857/ and hexgrid_4326/ have identical names,
+      # but GitHub release assets do not have subdirectories,
+      # so this step append the EPSG number to the end of the file name
+      # to prevent filename collision.
+      - name: Copy and rename GeoPackage files in preparation for upload
         run: |
           set -x
-          sha256sum -b */*.7z *.7z > opendrr-boundaries-gpkg-7z.sha256sum
+          mkdir release
+          cp -alv ./*.7z release/
+          for epsg in 3857 4326; do
+            pushd "hexgrid_$epsg" || exit 1
+            for file in *.7z; do
+              cp -alv "$file" ../release/"$(basename "$file" .7z)_$epsg.7z"
+            done
+            popd || exit 1
+          done
+
+      - name: Calculate checksum of GeoPackage files
+        run: |
+          set -x
+          cd release
+          sha256sum -b *.7z > opendrr-boundaries-gpkg-7z.sha256sum
           cat opendrr-boundaries-gpkg-7z.sha256sum
           ls -l
 
-      - name: "Upload GeoPackages as release assets using xresloader/upload-to-github-release@v1"
+      - name: "Upload GeoPackage files as release assets using xresloader/upload-to-github-release@v1"
         uses: xresloader/upload-to-github-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: "**/*.7z;opendrr-boundaries-gpkg-7z.sha256sum"
+          file: "release/*.7z;release/opendrr-boundaries-gpkg-7z.sha256sum"
           tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag || '' }}
           tags: true
           draft: false
